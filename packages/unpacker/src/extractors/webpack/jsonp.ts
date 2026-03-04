@@ -86,7 +86,6 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
             ],
         }],
     })
-
     if (moduleFactory.size() === 0) return null
 
     moduleFactory.forEach((path) => {
