@@ -38,10 +38,7 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
                 type: 'AssignmentExpression',
                 left: {
                     type: 'MemberExpression',
-                    object: {
-                        type: 'Identifier',
-                        name: (name: string) => selfVariableNames.includes(name),
-                    },
+                    object: (node) => (node.type === 'Identifier' && selfVariableNames.includes(node.name)) || node.type === 'ThisExpression',
                     property: (property: MemberExpression['property']) => {
                         return j.Identifier.check(property) || j.StringLiteral.check(property)
                     },
@@ -51,10 +48,7 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
                     operator: '||',
                     left: {
                         type: 'MemberExpression',
-                        object: {
-                            type: 'Identifier',
-                            name: (name: string) => selfVariableNames.includes(name),
-                        },
+                        object: (node) => (node.type === 'Identifier' && selfVariableNames.includes(node.name)) || node.type === 'ThisExpression',
                         property: (property: MemberExpression['property']) => {
                             return j.Identifier.check(property) || j.StringLiteral.check(property)
                         },
@@ -81,10 +75,10 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
                     properties: (properties: ObjectExpression['properties']) => {
                         if (properties.length === 0) return false
                         return properties.every((property) => {
-                            return j.ObjectProperty.check(property)
-                                    && (j.StringLiteral.check(property.key) || j.NumericLiteral.check(property.key))
+                            return (j.ObjectProperty.check(property) || j.Property.check(property) || j.ObjectMethod.check(property))
+                                    && (j.StringLiteral.check(property.key) || j.NumericLiteral.check(property.key) || j.Literal.check(property.key))
                                     && (j.FunctionExpression.check(property.value)
-                                    || (j.ArrowFunctionExpression.check(property.value) && j.BlockStatement.check(property.value.body))
+                                    || (j.ArrowFunctionExpression.check(property.value) && j.BlockStatement.check(property.value.body) || j.BlockStatement.check(property.body))
                                     )
                         })
                     },
@@ -92,6 +86,7 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
             ],
         }],
     })
+
     if (moduleFactory.size() === 0) return null
 
     moduleFactory.forEach((path) => {
@@ -99,9 +94,9 @@ export function getModulesForWebpackJsonP(j: JSCodeshift, root: Collection):
         const [_chunkIds, moreModules] = arrayExpression.elements as [ArrayExpression, ObjectExpression, any]
 
         moreModules.properties.forEach((property) => {
-            const prop = property as ObjectProperty
-            const moduleId = (prop.key as StringLiteral | NumericLiteral).value
-            const functionExpression = prop.value as FunctionExpression | ArrowFunctionExpression
+            const prop = property as ObjectProperty | Property | ObjectMethod
+            const moduleId = (prop.key as StringLiteral | NumericLiteral | Literal).value
+            const functionExpression = (prop.type == "ObjectMethod") ? prop : prop.value as FunctionExpression | ArrowFunctionExpression | undefined
             renameFunctionParameters(j, functionExpression, ['module', 'exports', 'require'])
             const functionBody = functionExpression.body as BlockStatement
 
