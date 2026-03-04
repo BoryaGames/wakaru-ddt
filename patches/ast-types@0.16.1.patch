@@ -1,5 +1,5 @@
 diff --git a/lib/def/flow.js b/lib/def/flow.js
-index 52235f04b59fcc061fbd2052b6a6d41ffc09ece3..347a74aec209cb8de312099b3c31be470fa8ab11 100644
+index 52235f04b59fcc061fbd2052b6a6d41ffc09ece3..b4f58bde6445b6b1069cbe3dde679e325d2613e5 100644
 --- a/lib/def/flow.js
 +++ b/lib/def/flow.js
 @@ -213,6 +213,9 @@ function default_1(fork) {
@@ -188,7 +188,7 @@ index 21bf0f3f8abd247e6a67e0003a14f1f016801c6d..911eef13f46b9932694a5e412a07cc2c
  export interface ScopeConstructor {
      new (path: NodePath, parentScope: any): Scope;
 diff --git a/lib/scope.js b/lib/scope.js
-index 81d6b01ce4c07ebaf75f8551fcef0c9151252d4e..36e5093dd5231a74121d70b178094afda274443d 100644
+index 81d6b01ce4c07ebaf75f8551fcef0c9151252d4e..15b176e8eb5f49d8a8461a56c9ae48aa22a86c14 100644
 --- a/lib/scope.js
 +++ b/lib/scope.js
 @@ -2,6 +2,7 @@
@@ -241,6 +241,15 @@ index 81d6b01ce4c07ebaf75f8551fcef0c9151252d4e..36e5093dd5231a74121d70b178094afd
      Sp.scan = function (force) {
          if (force || !this.didScan) {
              for (var name in this.bindings) {
+@@ -129,7 +148,7 @@ function scopePlugin(fork) {
+             }
+         }
+         if (ScopeType.check(node)) {
+-            if (namedTypes.CatchClause.check(node)) {
++            if (namedTypes.CatchClause.check(node) && node.param !== null) {
+                 // A catch clause establishes a new scope but the only variable
+                 // bound in that scope is the catch parameter. Any other
+                 // declarations create bindings in the outer scope.
 @@ -278,8 +297,11 @@ function scopePlugin(fork) {
                          namedTypes.ObjectProperty.check(property))) {
                      addPattern(propertyPath.get('value'), bindings);
