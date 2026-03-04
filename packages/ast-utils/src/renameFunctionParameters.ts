@@ -7,6 +7,7 @@ export function renameFunctionParameters(j: JSCodeshift, node: FunctionDeclarati
         !j.FunctionDeclaration.check(node)
         && !j.FunctionExpression.check(node)
         && !j.ArrowFunctionExpression.check(node)
+        && !j.ObjectProperty.check(node)
     ) return
 
     const targetScope = j(node).get().scope as Scope | undefined
